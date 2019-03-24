@@ -9,5 +9,8 @@
         <module name="MusicLibraryUtility" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="MusicLibraryUtility" target="8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

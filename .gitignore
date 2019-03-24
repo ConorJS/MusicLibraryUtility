@@ -17,6 +17,7 @@
 .idea/**/dictionaries
 .idea/**/shelf
 .idea/**/uiDesigner.xml
+.idea/libraries/
 
 
 # IDEA generated class files, etc.

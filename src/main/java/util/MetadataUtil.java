@@ -16,13 +16,8 @@ public class MetadataUtil {
 
     /**
      * Read audio track title from a given file
-     *
-     * @param file
-     * @return
      */
     public static String readMetadata(File file) {
-        String audioFileLoc = "D:\\Music\\Genre-sorted\\Electronic\\Hardstyle\\HardBase.FM\\2010 VA - HardBase.FM Vol. 1 (2-CD) [ZYX 82323-2]\\CD-1";
-
         String songName = null;
 
         try {
@@ -39,14 +34,9 @@ public class MetadataUtil {
             if (e.getMessage().contains("with this extension")) {
                 System.out.println("Can't read file: " + e.getMessage().split("ion:")[1]);
             }
-        } catch (IOException e) {
+        } catch (IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
             e.printStackTrace();
-        } catch (TagException e) {
-            e.printStackTrace();
-        } catch (ReadOnlyFileException e) {
-            e.printStackTrace();
-        } catch (InvalidAudioFrameException e) {
-            e.printStackTrace();
+
         } finally {
             return songName;
         }

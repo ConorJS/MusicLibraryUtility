@@ -8,10 +8,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 
 public class UI {
@@ -32,13 +31,10 @@ public class UI {
     public UI() { // set up
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (UnsupportedLookAndFeelException e) {
+
+        } catch (ClassNotFoundException | InstantiationException | UnsupportedLookAndFeelException |
+                IllegalAccessException e) {
+
             e.printStackTrace();
         }
 
@@ -78,7 +74,7 @@ public class UI {
         this.windowFrame.setVisible(true);
     }
 
-    public void clickCalculateButton() {
+    private void clickCalculateButton() {
         String tryPath = pathInputField.getText();
 
         File tryFile = new File(tryPath);
@@ -99,15 +95,13 @@ public class UI {
         }
     }
 
-    public void clickToggleButton() {
+    private void clickToggleButton() {
         this.duplicateCheck = !this.duplicateCheck;
         this.calculateButton.setText(this.duplicateCheck ? "Find duplicates" : "  Find uniques ");
     }
 
-    public void performTrackSearch(String path) {
+    private void performTrackSearch(String path) {
         java.util.List<File> musicFiles = FileHandlerUtil.getAllFiles(path, true);
-
-
 
         Map<String, List<File>> songOccurences = new HashMap<>();
         List<String> musicFileTypes = new ArrayList<>();
@@ -187,54 +181,46 @@ public class UI {
         this.appendUIText("Non-music file types: " + otherFileTypeLine, true);
         this.appendUIText("</b>", true);
 
-        for (List<File> occurences : songOccurences.values()) {
+        // order the song name list
+        List<String> songNamesSorted = songOccurences.keySet().stream()
+                .sorted()
+                .collect(Collectors.toList());
 
-            if (((occurences.size() > 1) && (this.duplicateCheck)) | ((occurences.size() == 1) && (!this.duplicateCheck))) {
-                String songName = MetadataUtil.readMetadata(occurences.get(0));
+        for (String songName : songNamesSorted) {
+            List<File> occurrences = songOccurences.get(songName);
 
-                this.appendUIText("<b>" + ((songName.toString().length() > 0) ? songName : "[unnamed song]") + " has "
-                        + occurences.size() + " occurence(s)</b>", true);
-                for (File occurrence : occurences) {
+            if (((occurrences.size() > 1) && (this.duplicateCheck)) | ((occurrences.size() == 1) && (!this.duplicateCheck))) {
+                String caseCorrectSongName = MetadataUtil.readMetadata(occurrences.get(0));
+
+                this.appendUIText("<b>" +
+                        ((caseCorrectSongName.length() > 0) ? caseCorrectSongName : "[unnamed song]") + " has "
+                        + occurrences.size() + " occurence(s)</b>", true);
+
+                for (File occurrence : occurrences) {
                     this.appendUIText("\t" + trimRootFromPath(occurrence.toString(), path), true);
                 }
 
                 this.appendUIText("", true);
             }
         }
-
-        // Old HashMap access implementation
-        /*for (String songName : songOccurences.keySet()) {
-            System.out.println(count);
-            count++;
-            if ((songOccurences.get(songName).size() > 1) && songName != null) {
-                this.appendUIText(((songName.toString().length() > 0) ? songName : "[unnamed song]") + " has "
-                        + songOccurences.get(songName).size() + " occurence(s)", true);
-                for (File occurrence : songOccurences.get(songName)) {
-                    this.appendUIText("\t" + trimRootFromPath(occurrence.toString(), path), true);
-                }
-
-                this.appendUIText("", true);
-            }
-        }*/
     }
 
-    public void clearTextOfUI() {
+    private void clearTextOfUI() {
         this.setTextOfUI("");
     }
 
-
-    public void setTextOfUI(String text) {
+    private void setTextOfUI(String text) {
         this.uiText = text;
 
         this.containerMiddleText_Label.setText("<html>" + this.uiText + "</html>");
     }
 
-    public void appendUIText(Object text, boolean newLine) {
+    private void appendUIText(Object text, boolean newLine) {
         String str = text.toString();
         this.setTextOfUI(this.uiText + (newLine ? "<br>" : "") + str);
     }
 
-    public String trimRootFromPath(String fullPath, String root) {
+    private String trimRootFromPath(String fullPath, String root) {
         String trimmed = fullPath;
 
         if (fullPath.startsWith(root)) {
@@ -243,5 +229,4 @@ public class UI {
 
         return trimmed;
     }
-
 }

@@ -13,27 +13,30 @@ public class FileHandlerUtil {
      *
      * @param path  Root to begin searching from
      * @param recurse Flag to check all subdirectories (and their subdirectories, i.e recursive checking)
-     * @return
+     *
+     * @return All the files located beneath the root path (this includes contents of subdirectories)
      */
     public static List<File> getAllFiles(String path, boolean recurse){
         File[] files = new File(path).listFiles();
 
-        List<File> fileList = Arrays.asList(files).stream()
-                .flatMap(file -> {
+        if (files != null) {
+            return Arrays.stream(files)
+                    .flatMap(file -> {
+                        List<File> subDirectoryFiles = new ArrayList<>(); // also will store tree leaves (files) in 1-size array
 
-                    List<File> subDirectoryFiles = new ArrayList<>(); // also will store tree leaves (files) in 1-size array
+                        if (file.isDirectory() && recurse) {
+                            subDirectoryFiles.addAll(getAllFiles(file.getPath(), true));
 
-                    if (file.isDirectory() && recurse) {
-                        subDirectoryFiles.addAll(getAllFiles(file.getPath(), true));
-                    } else {
-                        subDirectoryFiles.add(file);
-                    }
+                        } else {
+                            subDirectoryFiles.add(file);
+                        }
 
-                    return subDirectoryFiles.stream();
-                })
-                .collect(Collectors.toList());
+                        return subDirectoryFiles.stream();
+                    }).collect(Collectors.toList());
 
-        return fileList;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
 }
