@@ -8,8 +8,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -186,15 +190,31 @@ public class UI {
                 .sorted()
                 .collect(Collectors.toList());
 
+        // A song ending with a section in parentheses - tolerant of trailing whitespace
+        Pattern pattern = Pattern.compile("^(.*)\\((.*)\\) *$");
+
         for (String songName : songNamesSorted) {
             List<File> occurrences = songOccurences.get(songName);
 
+            // if a song ends with something in parentheses e.g -> (feat. Some Artist),
+            // then check if we have a song by the same name, without the parentheses ending
+            Matcher parenthesesEndingMatcher = pattern.matcher(songName);
+            boolean possibleModifiedSong = false;
+            if (parenthesesEndingMatcher.matches()) {
+                String trueSongName = parenthesesEndingMatcher.group(1).trim();
+                possibleModifiedSong = songOccurences.containsKey(trueSongName);
+
+            }
+
             if (((occurrences.size() > 1) && (this.duplicateCheck)) | ((occurrences.size() == 1) && (!this.duplicateCheck))) {
+
                 String caseCorrectSongName = MetadataUtil.readMetadata(occurrences.get(0));
 
-                this.appendUIText("<b>" +
-                        ((caseCorrectSongName.length() > 0) ? caseCorrectSongName : "[unnamed song]") + " has "
-                        + occurrences.size() + " occurence(s)</b>", true);
+                this.appendUIText(((caseCorrectSongName.length() > 0) ? caseCorrectSongName : "[unnamed song]") + " has "
+                        + occurrences.size() + " occurence(s)",
+                        true, true,
+                        possibleModifiedSong ? Color.RED : Color.BLACK
+                );
 
                 for (File occurrence : occurrences) {
                     this.appendUIText("\t" + trimRootFromPath(occurrence.toString(), path), true);
@@ -209,6 +229,7 @@ public class UI {
         this.setTextOfUI("");
     }
 
+    // TODO: Refactor these three methods - API is too busy
     private void setTextOfUI(String text) {
         this.uiText = text;
 
@@ -218,6 +239,37 @@ public class UI {
     private void appendUIText(Object text, boolean newLine) {
         String str = text.toString();
         this.setTextOfUI(this.uiText + (newLine ? "<br>" : "") + str);
+    }
+
+    private void appendUIText(Object text, boolean newLine, boolean isBold, Color color) {
+        StringBuilder bob = new StringBuilder();
+
+        if (isBold) {
+            bob.append("<b");
+        }
+
+        if (!color.equals(Color.BLACK)) {
+            if (!isBold) {
+                bob.append("<");
+            } else {
+                bob.append(" ");
+            }
+
+            bob.append("style=\"color: rgb(")
+                    .append(color.getRed()).append(",")
+                    .append(color.getGreen()).append(",")
+                    .append(color.getBlue()).append(")\"");
+        }
+
+        bob.append(">");
+
+        bob.append(text);
+
+        if (isBold) {
+            bob.append("</b>");
+        }
+
+        appendUIText(bob.toString(), newLine);
     }
 
     private String trimRootFromPath(String fullPath, String root) {
